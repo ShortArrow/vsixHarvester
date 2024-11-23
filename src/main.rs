@@ -1,56 +1,17 @@
 use clap::Parser;
-use serde::Deserialize;
 use std::error::Error;
 use std::fs;
-use std::path::Path;
 use tokio;
 
 mod download;
 mod version;
-
-#[derive(Parser)]
-struct Args {
-    /// Path to extensions.json
-    #[arg(short, long, default_value = "./.vscode/extensions.json")]
-    input: String,
-
-    /// Output directory
-    #[arg(short, long, default_value = "./.vscode/extensions")]
-    destination: String,
-
-    /// Force redownload if exists
-    #[arg(long)]
-    no_cache: bool,
-
-    /// Specify proxy url
-    #[arg(long)]
-    proxy: Option<String>,
-
-    /// Show verbose infomation
-    #[arg(short, long)]
-    verbose: bool,
-
-    /// Specify OS architecture
-    #[arg(short, long)]
-    arch: Option<String>,
-}
-
-#[derive(Deserialize)]
-struct Extensions {
-    recommendations: Vec<String>,
-}
-
-fn create_directory_if_not_exists(path: &str) -> Result<(), Box<dyn std::error::Error>> {
-    let path = Path::new(path);
-    if !path.exists() {
-        fs::create_dir_all(path)?;
-    }
-    Ok(())
-}
+mod cli;
+mod json;
+mod directory;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
-    let args = Args::parse();
+    let args = cli::Args::parse();
 
     // Read extensions.json
     if args.verbose {
@@ -63,7 +24,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             return Err(Box::new(e) as Box<dyn Error>);
         }
     };
-    let extensions: Extensions = match serde_json::from_str(&file_content) {
+    let extensions: json::Extensions = match serde_json::from_str(&file_content) {
         Ok(extensions) => extensions,
         Err(e) => {
             eprintln!("Failed to parse file {}: {}", &args.input, e);
@@ -72,7 +33,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Ensure the destination directory exists
-    create_directory_if_not_exists(&args.destination)?;
+    directory::create_directory_if_not_exists(&args.destination)?;
 
     // Download each extension
     for extension in extensions.recommendations {
