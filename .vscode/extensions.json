@@ -4,6 +4,7 @@
     "davidanson.vscode-markdownlint",
     "bierner.markdown-mermaid",
     "editorconfig.editorconfig",
-    "usernamehw.errorlens"
+    "usernamehw.errorlens",
+    "vadimcn.vscode-lldb"
   ]
 }
