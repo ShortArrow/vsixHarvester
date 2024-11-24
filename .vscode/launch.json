@@ -7,11 +7,31 @@
     {
       "type": "lldb",
       "request": "launch",
-      "name": "Debug executable",
+      "name": "lldb",
       "program": "${workspaceFolder}/target/debug/${workspaceFolderBasename}",
-      "args": [],
+      "args": ["-v", "--arch", "win32-x64"],
       "cwd": "${workspaceFolder}",
       "preLaunchTask": "rust: cargo build"
+    },
+    {
+      "type": "lldb-dap",
+      "request": "launch",
+      "name": "lldb-dap",
+      "program": "${workspaceFolder}/target/debug/${workspaceFolderBasename}",
+      "args": ["-v", "--arch", "win32-x64"],
+      "cwd": "${workspaceFolder}",
+      "preLaunchTask": "rust: cargo build"
+    },
+    {
+      "name": "cppvsdbg",
+      "type": "cppvsdbg",
+      "request": "launch",
+      "program": "${workspaceFolder}/target/debug/${workspaceFolderBasename}",
+      "args": ["-v", "--arch", "win32-x64"],
+      "stopAtEntry": false,
+      "cwd": "${workspaceRoot}",
+      "environment": [],
+      "console": "internalConsole"
     }
   ]
 }
