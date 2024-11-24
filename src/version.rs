@@ -75,3 +75,36 @@ pub async fn get_extension_info(
 
     Ok((version, architectures))
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[tokio::test]
+    async fn test_get_extension_info() {
+        let (version, architectures) = get_extension_info("rust-lang", "rust-analyzer", None, false)
+            .await
+            .unwrap();
+        let firstversion = version.chars().next().unwrap();
+        let secondversion = version.chars().nth(2).unwrap();
+        let thirdversion = version.chars().nth(4).unwrap();
+        let is_digit_first = firstversion.is_digit(10);
+        let is_digit_second = secondversion.is_digit(10);
+        let is_digit_third = thirdversion.is_digit(10);
+        assert_eq!(is_digit_first, true);
+        assert_eq!(is_digit_second, true);
+        assert_eq!(is_digit_third, true);
+        // expect ["win32-arm64", "darwin-x64", "win32-x64", "linux-armhf", "linux-x64", "linux-arm64", "alpine-x64", "darwin-arm64", "win32-ia32"]
+        assert!(architectures.contains(&"win32-arm64".to_string()));
+        assert!(architectures.contains(&"darwin-x64".to_string()));
+        assert!(architectures.contains(&"win32-x64".to_string()));
+        assert!(architectures.contains(&"linux-armhf".to_string()));
+        assert!(architectures.contains(&"linux-x64".to_string()));
+        assert!(architectures.contains(&"linux-arm64".to_string()));
+        assert!(architectures.contains(&"alpine-x64".to_string()));
+        assert!(architectures.contains(&"darwin-arm64".to_string()));
+        assert!(architectures.contains(&"win32-ia32".to_string()));
+        
+        assert_eq!(architectures.len(), 9);
+    }
+}
