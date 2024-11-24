@@ -5,6 +5,7 @@
     "bierner.markdown-mermaid",
     "editorconfig.editorconfig",
     "usernamehw.errorlens",
-    "vadimcn.vscode-lldb"
+    "vadimcn.vscode-lldb",
+    "llvm-vs-code-extensions.lldb-dap"
   ]
 }
