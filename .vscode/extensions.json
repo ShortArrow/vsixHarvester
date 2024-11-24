@@ -6,6 +6,7 @@
     "editorconfig.editorconfig",
     "usernamehw.errorlens",
     "vadimcn.vscode-lldb",
-    "llvm-vs-code-extensions.lldb-dap"
+    "llvm-vs-code-extensions.lldb-dap",
+    "swellaby.vscode-rust-test-adapter"
   ]
 }
