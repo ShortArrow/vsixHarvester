@@ -23,9 +23,9 @@ pub async fn download_extension(
     let extension_name = parts[1];
 
     // Get latest version
-    let version = version::get_extension_version(publisher, extension_name, proxy, verbose).await?;
+    let (version, _platforms) = version::get_extension_info(publisher, extension_name, proxy, verbose).await?;
     if verbose {
-        println!("Latest version of {}: {}", extension, version);
+        println!("Latest version of {}: {:?}", extension, version);
     }
 
     // Create download url

@@ -2,6 +2,7 @@ use clap::Parser;
 use std::error::Error;
 use std::fs;
 use tokio;
+use env_logger;
 
 mod download;
 mod version;
@@ -11,6 +12,7 @@ mod directory;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
+    env_logger::init();
     let args = cli::Args::parse();
 
     // Read extensions.json

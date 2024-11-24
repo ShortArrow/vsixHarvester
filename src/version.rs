@@ -1,11 +1,12 @@
 use serde_json::json;
+use log::{debug, info};
 
-pub async fn get_extension_version(
+pub async fn get_extension_info(
     publisher: &str,
     extension_name: &str,
     proxy: Option<&str>,
     verbose: bool,
-) -> Result<String, Box<dyn std::error::Error>> {
+) -> Result<(String, Vec<String>), Box<dyn std::error::Error>> {
     let api_url = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery";
 
     let payload = json!({
@@ -55,8 +56,22 @@ pub async fn get_extension_version(
     // Extract version
     let version = resp_json["results"][0]["extensions"][0]["versions"][0]["version"]
         .as_str()
-        .ok_or("Failed get extension version")?
+        .ok_or("Failed to get extension version")?
         .to_string();
+    debug!("Response debug: {:?}", version);
+    info!("Response info: {:?}", version);
+    println!("{:?}", version);
 
-    Ok(version)
+    // Extract supported architectures
+    let architectures = resp_json["results"][0]["extensions"][0]["versions"]
+        .as_array()
+        .ok_or("Failed to get versions array")?
+        .iter()
+        .filter_map(|v| v["targetPlatform"].as_str().map(|s| s.to_string()))
+        .collect();
+    debug!("Response debug: {:#?}", architectures);
+    info!("Response info: {:#?}", architectures);
+    println!("{:?}", architectures);
+
+    Ok((version, architectures))
 }
