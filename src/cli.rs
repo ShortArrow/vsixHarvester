@@ -1,6 +1,6 @@
 use clap::Parser;
 
-#[derive(Parser)]
+#[derive(Parser, Debug)]
 pub struct Args {
     /// Path to extensions.json
     #[arg(short, long, default_value = "./.vscode/extensions.json")]
