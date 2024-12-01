@@ -1,7 +1,7 @@
 use serde_json::json;
 use log::{debug, info};
 
-pub async fn get_extension_info(
+pub async fn get(
     publisher: &str,
     extension_name: &str,
     proxy: Option<&str>,
@@ -82,7 +82,7 @@ mod tests {
 
     #[tokio::test]
     async fn test_get_extension_info() {
-        let (version, architectures) = get_extension_info("rust-lang", "rust-analyzer", None, false)
+        let (version, architectures) = get("rust-lang", "rust-analyzer", None, false)
             .await
             .unwrap();
         let firstversion = version.chars().next().unwrap();

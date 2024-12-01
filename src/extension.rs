@@ -1,8 +1,8 @@
 use std::fs;
 use std::path::Path;
-use crate::version;
+use crate::info;
 
-pub async fn download_extension(
+pub async fn download(
     extension: &str,
     destination: &str,
     no_cache: bool,
@@ -23,7 +23,7 @@ pub async fn download_extension(
     let extension_name = parts[1];
 
     // Get latest version
-    let (version, _platforms) = version::get_extension_info(publisher, extension_name, proxy, verbose).await?;
+    let (version, _platforms) = info::get(publisher, extension_name, proxy, verbose).await?;
     if verbose {
         println!("Latest version of {}: {:?}", extension, version);
     }

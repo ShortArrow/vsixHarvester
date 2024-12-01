@@ -4,8 +4,8 @@ use std::fs;
 use tokio;
 use env_logger;
 
-mod download;
-mod version;
+mod extension;
+mod info;
 mod cli;
 mod json;
 mod directory;
@@ -35,14 +35,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Ensure the destination directory exists
-    directory::create_directory_if_not_exists(&args.destination)?;
+    directory::create(&args.destination)?;
 
     // Download each extension
     for extension in extensions.recommendations {
         if args.verbose {
             println!("Attempting to download extension: {}", &extension);
         }
-        if let Err(e) = download::download_extension(
+        if let Err(e) = extension::download(
             &extension,
             &args.destination,
             args.no_cache,
