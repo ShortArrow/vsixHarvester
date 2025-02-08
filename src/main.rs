@@ -1,14 +1,15 @@
 use clap::Parser;
+use directory::RealFileSystem;
+use env_logger;
 use std::error::Error;
 use std::fs;
 use tokio;
-use env_logger;
 
+mod cli;
+mod directory;
 mod extension;
 mod info;
-mod cli;
 mod json;
-mod directory;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -35,7 +36,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     };
 
     // Ensure the destination directory exists
-    directory::create(&args.destination)?;
+    directory::create_dir_all(&args.destination)?;
 
     // Download each extension
     for extension in extensions.recommendations {
