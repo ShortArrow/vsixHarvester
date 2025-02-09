@@ -1,4 +1,4 @@
-use crate::info;
+use crate::extensions::info;
 use std::fs;
 use std::path::Path;
 

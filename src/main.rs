@@ -3,11 +3,11 @@ use env_logger;
 use std::error::Error;
 use std::fs;
 use tokio;
+use extensions::extension;
 
 mod cli;
 mod directory;
-mod extension;
-mod info;
+mod extensions;
 mod json;
 
 #[tokio::main]
