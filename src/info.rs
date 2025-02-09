@@ -1,5 +1,5 @@
-use serde_json::json;
 use log::{debug, info};
+use serde_json::json;
 
 #[derive(Debug, PartialEq)]
 pub struct ExtensionInfo {
@@ -18,7 +18,7 @@ pub async fn get(
     let payload = json!({
         "filters": [{
             "criteria": [
-                {"filterType": 7, "value": format!("{}.{}", publisher, extension_name)}
+                {"filterType": 7, "value": format!("{publisher}.{extension_name}")}
             ]
         }],
         "flags": 914
@@ -38,10 +38,7 @@ pub async fn get(
 
     // Send POST request
     if verbose {
-        println!(
-            "Sending query for Marketplace API: {}.{}",
-            publisher, extension_name
-        );
+        println!("Sending query for Marketplace API: {publisher}.{extension_name}");
     }
     let resp = client
         .post(api_url)
@@ -64,9 +61,9 @@ pub async fn get(
         .as_str()
         .ok_or("Failed to get extension version")?
         .to_string();
-    debug!("Response debug: {:?}", version);
-    info!("Response info: {:?}", version);
-    println!("{:?}", version);
+    debug!("Response debug: {version:?}");
+    info!("Response info: {version:?}");
+    println!("{version:?}");
 
     // Extract supported architectures
     let architectures = resp_json["results"][0]["extensions"][0]["versions"]
@@ -75,11 +72,14 @@ pub async fn get(
         .iter()
         .filter_map(|v| v["targetPlatform"].as_str().map(|s| s.to_string()))
         .collect();
-    debug!("Response debug: {:#?}", architectures);
-    info!("Response info: {:#?}", architectures);
-    println!("{:?}", architectures);
+    debug!("Response debug: {architectures:#?}");
+    info!("Response info: {architectures:#?}");
+    println!("{architectures:?}");
 
-   Ok(ExtensionInfo { version, architectures })
+    Ok(ExtensionInfo {
+        version,
+        architectures,
+    })
 }
 
 #[cfg(test)]
@@ -100,17 +100,26 @@ mod tests {
         assert_eq!(is_digit_first, true);
         assert_eq!(is_digit_second, true);
         assert_eq!(is_digit_third, true);
-        // expect ["win32-arm64", "darwin-x64", "win32-x64", "linux-armhf", "linux-x64", "linux-arm64", "alpine-x64", "darwin-arm64", "win32-ia32"]
-        assert!(extension_info.architectures.contains(&"win32-arm64".to_string()));
-        assert!(extension_info.architectures.contains(&"darwin-x64".to_string()));
-        assert!(extension_info.architectures.contains(&"win32-x64".to_string()));
-        assert!(extension_info.architectures.contains(&"linux-armhf".to_string()));
-        assert!(extension_info.architectures.contains(&"linux-x64".to_string()));
-        assert!(extension_info.architectures.contains(&"linux-arm64".to_string()));
-        assert!(extension_info.architectures.contains(&"alpine-x64".to_string()));
-        assert!(extension_info.architectures.contains(&"darwin-arm64".to_string()));
-        assert!(extension_info.architectures.contains(&"win32-ia32".to_string()));
-        
-        assert_eq!(extension_info.architectures.len(), 9);
+
+        let expected_architectures = vec![
+            "win32-arm64",
+            "darwin-x64",
+            "win32-x64",
+            "linux-armhf",
+            "linux-x64",
+            "linux-arm64",
+            "alpine-x64",
+            "darwin-arm64",
+            "win32-ia32",
+        ];
+
+        for arch in expected_architectures.clone() {
+            assert!(extension_info.architectures.contains(&arch.to_string()));
+        }
+
+        assert_eq!(
+            extension_info.architectures.len(),
+            expected_architectures.len()
+        );
     }
 }
