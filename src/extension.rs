@@ -2,26 +2,27 @@ use crate::info;
 use std::fs;
 use std::path::Path;
 
-fn get_target_platform(os_arch: Option<&str>) -> Option<&str> {
-    let supported_platforms = [
-        "darwin-x64",
-        "darwin-arm64",
-        "win32-x64",
-        "win32-arm64",
-        "linux-x64",
-        "linux-arm64",
-    ];
-
-    match os_arch {
-        Some(arch) if supported_platforms.contains(&arch) => Some(arch),
-        Some(other) => {
-            eprintln!("Unsupported OS architecture: {}", other);
+fn get_target_platform(os_arch: Option<&str>, info: info::ExtensionInfo) -> Option<&str> {
+    let current = std::env::consts::ARCH;
+    let supporteds = info.architectures.clone();
+    if supporteds.iter().count() == 0 {
+        return None;
+    }
+    let specified = match os_arch {
+        Some(arch) if supporteds.contains(&arch.to_string()) => Some(arch),
+        Some(arch) => {
+            eprintln!("Unsupported OS architecture: {arch}");
             None
         }
-        None => {
-            eprintln!("OS architecture not specified.");
-            None
-        }
+        None => None,
+    };
+    if specified.is_some() {
+        return specified;
+    }
+    if supporteds.contains(&current.to_string()) {
+        Some(current)
+    } else {
+        None
     }
 }
 
@@ -47,13 +48,13 @@ pub async fn download(
 
     // Get latest version
     let extension_info = info::get(publisher, extension_name, proxy, verbose).await?;
-    let version = &extension_info.version;
+    let version = &extension_info.version.clone();
     if verbose {
         println!("Latest version of {}: {:?}", extension, version);
     }
 
     // Create download url
-    let target_platform = get_target_platform(os_arch);
+    let target_platform = get_target_platform(os_arch, extension_info);
     if target_platform.is_none() {
         return Ok(());
     }
@@ -72,7 +73,9 @@ pub async fn download(
 
     // Make file path
     let file_name = match target_platform {
-        Some(target_platform) => format!("{publisher}.{extension_name}-{version}@{target_platform}.vsix"),
+        Some(target_platform) => {
+            format!("{publisher}.{extension_name}-{version}@{target_platform}.vsix")
+        }
         None => format!("{publisher}.{extension_name}-{version}.vsix"),
     };
     let file_path = format!("{}/{}", destination, file_name);
