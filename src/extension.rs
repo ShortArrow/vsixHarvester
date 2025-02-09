@@ -2,6 +2,22 @@ use crate::info;
 use std::fs;
 use std::path::Path;
 
+fn get_download_url(
+    publisher: &str,
+    extension_name: &str,
+    version: &str,
+    target_platform: Option<&str>,
+) -> String {
+    match target_platform {
+        Some(target_platform) => format!(
+            "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/{publisher}/vsextensions/{extension_name}/{version}/vspackage?targetPlatform={target_platform}",
+            ),
+        None => format!(
+            "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/{publisher}/vsextensions/{extension_name}/{version}/vspackage",
+            ),
+    }
+}
+
 fn get_target_platform(os_arch: Option<&str>, info: info::ExtensionInfo) -> Option<&str> {
     let current = std::env::consts::ARCH;
     let supporteds = info.architectures.clone();
@@ -55,20 +71,9 @@ pub async fn download(
 
     // Create download url
     let target_platform = get_target_platform(os_arch, extension_info);
-    if target_platform.is_none() {
-        return Ok(());
-    }
-
-    let download_url = format!(
-        "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/{publisher}/vsextensions/{extension_name}/{version}/vspackage?targetPlatform={target_platform}",
-        publisher = publisher,
-        extension_name = extension_name,
-        version = version,
-        target_platform = target_platform.unwrap()
-    );
-
+    let download_url = get_download_url(publisher, extension_name, version, target_platform);
     if verbose {
-        println!("Download URL: {download_url}");
+        println!("Download URL: {download_url:?}");
     }
 
     // Make file path
