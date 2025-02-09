@@ -42,6 +42,32 @@ fn get_target_platform(os_arch: Option<&str>, info: info::ExtensionInfo) -> Opti
     }
 }
 
+#[derive(Debug)]
+struct ExtensionName {
+    name: String,
+    publisher: String,
+}
+
+fn validate_extension_name(name: &str) -> bool {
+    let parts: Vec<&str> = name.split('.').collect();
+    parts.len() == 2
+}
+
+fn parse_extension_name(name: &str) -> ExtensionName {
+    if !validate_extension_name(name) {
+        eprintln!("Invalid extension format: {name}");
+        panic!("Extension name must be in the format 'publisher.name'");
+    }
+
+    let parts: Vec<&str> = name.split('.').collect();
+    let publisher = parts[0];
+    let name = parts[1];
+    ExtensionName {
+        name: name.to_string(),
+        publisher: publisher.to_string(),
+    }
+}
+
 pub async fn download(
     extension: &str,
     destination: &str,
@@ -54,13 +80,9 @@ pub async fn download(
         println!("Progress in extension: {extension}");
     }
 
-    let parts: Vec<&str> = extension.split('.').collect();
-    if parts.len() != 2 {
-        eprintln!("Invalid extension identifier: {extension}");
-        return Ok(());
-    }
-    let publisher = parts[0];
-    let extension_name = parts[1];
+    let parsed_extension_name = parse_extension_name(extension);
+    let publisher = &parsed_extension_name.publisher;
+    let extension_name = &parsed_extension_name.name;
 
     // Get latest version
     let extension_info = info::get(publisher, extension_name, proxy, verbose).await?;
