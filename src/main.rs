@@ -1,5 +1,4 @@
 use clap::Parser;
-use directory::RealFileSystem;
 use env_logger;
 use std::error::Error;
 use std::fs;

@@ -1,6 +1,29 @@
+use crate::info;
 use std::fs;
 use std::path::Path;
-use crate::info;
+
+fn get_target_platform(os_arch: Option<&str>) -> Option<&str> {
+    let supported_platforms = [
+        "darwin-x64",
+        "darwin-arm64",
+        "win32-x64",
+        "win32-arm64",
+        "linux-x64",
+        "linux-arm64",
+    ];
+
+    match os_arch {
+        Some(arch) if supported_platforms.contains(&arch) => Some(arch),
+        Some(other) => {
+            eprintln!("Unsupported OS architecture: {}", other);
+            None
+        }
+        None => {
+            eprintln!("OS architecture not specified.");
+            None
+        }
+    }
+}
 
 pub async fn download(
     extension: &str,
@@ -29,29 +52,17 @@ pub async fn download(
     }
 
     // Create download url
-    let target_platform = match os_arch {
-        Some("darwin-x64") => "darwin-x64",
-        Some("darwin-arm64") => "darwin-arm64",
-        Some("win32-x64") => "win32-x64",
-        Some("win32-arm64") => "win32-arm64",
-        Some("linux-x64") => "linux-x64",
-        Some("linux-arm64") => "linux-arm64",
-        Some(other) => {
-            eprintln!("Unsupported OS architecture: {}", other);
-            return Ok(());
-        }
-        None => {
-            eprintln!("OS architecture not specified.");
-            return Ok(());
-        }
-    };
+    let target_platform = get_target_platform(os_arch);
+    if target_platform.is_none() {
+        return Ok(());
+    }
 
     let download_url = format!(
         "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/{publisher}/vsextensions/{extension_name}/{version}/vspackage?targetPlatform={target_platform}",
         publisher = publisher,
         extension_name = extension_name,
         version = version,
-        target_platform = target_platform
+        target_platform = target_platform.unwrap()
     );
 
     if verbose {
@@ -59,7 +70,10 @@ pub async fn download(
     }
 
     // Make file path
-    let file_name = format!("{publisher}.{extension_name}-{version}@{target_platform}.vsix");
+    let file_name = match target_platform {
+        Some(target_platform) => format!("{publisher}.{extension_name}-{version}@{target_platform}.vsix"),
+        None => format!("{publisher}.{extension_name}-{version}.vsix"),
+    };
     let file_path = format!("{}/{}", destination, file_name);
 
     // Check file already exists
