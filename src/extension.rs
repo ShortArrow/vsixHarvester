@@ -35,12 +35,12 @@ pub async fn download(
     os_arch: Option<&str>,
 ) -> Result<(), Box<dyn std::error::Error>> {
     if verbose {
-        println!("Progress in extension: {}", extension);
+        println!("Progress in extension: {extension}");
     }
 
     let parts: Vec<&str> = extension.split('.').collect();
     if parts.len() != 2 {
-        eprintln!("Invalid extension identifier: {}", extension);
+        eprintln!("Invalid extension identifier: {extension}");
         return Ok(());
     }
     let publisher = parts[0];
@@ -50,7 +50,7 @@ pub async fn download(
     let extension_info = info::get(publisher, extension_name, proxy, verbose).await?;
     let version = &extension_info.version.clone();
     if verbose {
-        println!("Latest version of {}: {:?}", extension, version);
+        println!("Latest version of {extension}: {version:?}");
     }
 
     // Create download url
@@ -68,7 +68,7 @@ pub async fn download(
     );
 
     if verbose {
-        println!("Download URL: {}", download_url);
+        println!("Download URL: {download_url}");
     }
 
     // Make file path
@@ -78,15 +78,12 @@ pub async fn download(
         }
         None => format!("{publisher}.{extension_name}-{version}.vsix"),
     };
-    let file_path = format!("{}/{}", destination, file_name);
+    let file_path = format!("{destination}/{file_name}");
 
-    // Check file already exists
+    // Check if the file already exists
     if !no_cache && Path::new(&file_path).exists() {
         if verbose {
-            println!(
-                "Skip download: File is already exists. File Name {}.",
-                file_path
-            );
+            println!("Skip download: File is already exists. File Name {file_path}.");
         }
         return Ok(());
     }
@@ -95,7 +92,7 @@ pub async fn download(
     let client_builder = reqwest::Client::builder();
     let client = if let Some(proxy_url) = proxy {
         if verbose {
-            println!("Using proxy: {}", proxy_url);
+            println!("Using proxy: {proxy_url}");
         }
         let proxy = reqwest::Proxy::all(proxy_url)?;
         client_builder.proxy(proxy).build()?
@@ -105,11 +102,11 @@ pub async fn download(
 
     // Download VSIX file
     if verbose {
-        println!("Download form {}", download_url);
+        println!("Download from {download_url}");
     }
     let resp = client.get(&download_url).send().await?;
     if !resp.status().is_success() {
-        eprintln!("Fail download of {}", extension);
+        eprintln!("Fail download of {extension}");
         return Err(Box::from("Fail download of VSIX"));
     }
     let vsix_content = resp.bytes().await?;
@@ -117,7 +114,7 @@ pub async fn download(
     // Save file
     fs::write(&file_path, &vsix_content)?;
     if verbose {
-        println!("Saved in {}", file_path);
+        println!("Saved in {file_path}");
     }
 
     Ok(())
