@@ -21,24 +21,54 @@ fn get_download_url(
 fn get_target_platform(os_arch: Option<&str>, info: info::ExtensionInfo) -> Option<&str> {
     let current = std::env::consts::ARCH;
     let supporteds = info.architectures.clone();
-    if supporteds.iter().count() == 0 {
+    if supporteds.is_empty() {
         return None;
     }
-    let specified = match os_arch {
+    match os_arch {
         Some(arch) if supporteds.contains(&arch.to_string()) => Some(arch),
         Some(arch) => {
-            eprintln!("Unsupported OS architecture: {arch}");
+            eprintln!("Unsupported OS architecture: {arch} is not supported for {supporteds:?}");
             None
         }
+        None if supporteds.contains(&current.to_string()) => Some(current),
         None => None,
-    };
-    if specified.is_some() {
-        return specified;
     }
-    if supporteds.contains(&current.to_string()) {
-        Some(current)
-    } else {
-        None
+}
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    #[test]
+    fn test_when_current_is_supported() {
+        let current = std::env::consts::ARCH;
+        let info = info::ExtensionInfo {
+            architectures: vec![current.to_string(), "x64".to_string(), "x86".to_string()],
+            ..Default::default()
+        };
+        assert_eq!(Some("x64"), get_target_platform(Some("x64"), info.clone()));
+        assert_eq!(Some("x86"), get_target_platform(Some("x86"), info.clone()));
+        assert_eq!(None, get_target_platform(Some("tekito"), info.clone()));
+        assert_eq!(Some(current), get_target_platform(None, info));
+    }
+    #[test]
+    fn test_when_current_is_not_supported() {
+        let info = info::ExtensionInfo {
+            architectures: vec!["x64".to_string(), "x86".to_string()],
+            ..Default::default()
+        };
+        let current = std::env::consts::ARCH;
+        assert_eq!(None, get_target_platform(None, info.clone()));
+        assert_eq!(Some("x64"), get_target_platform(Some("x64"), info.clone()));
+        assert_eq!(None, get_target_platform(Some(current), info));
+    }
+    #[test]
+    fn test_when_no_supported_architectures() {
+        let info = info::ExtensionInfo {
+            architectures: vec![],
+            ..Default::default()
+        };
+        assert_eq!(None, get_target_platform(None, info.clone()));
+        assert_eq!(None, get_target_platform(Some("x64"), info));
     }
 }
 

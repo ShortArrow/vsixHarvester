@@ -1,7 +1,7 @@
 use log::{debug, info};
 use serde_json::json;
 
-#[derive(Debug, PartialEq)]
+#[derive(Debug, Clone, PartialEq, Default)]
 pub struct ExtensionInfo {
     pub version: String,
     pub architectures: Vec<String>,
