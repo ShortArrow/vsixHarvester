@@ -46,7 +46,8 @@ pub async fn download(
     let extension_name = parts[1];
 
     // Get latest version
-    let (version, _platforms) = info::get(publisher, extension_name, proxy, verbose).await?;
+    let extension_info = info::get(publisher, extension_name, proxy, verbose).await?;
+    let version = &extension_info.version;
     if verbose {
         println!("Latest version of {}: {:?}", extension, version);
     }
