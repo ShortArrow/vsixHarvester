@@ -54,6 +54,7 @@ mod tests {
         }
     }
     #[test]
+    // If the directory does not exist, create_dir_all should be called
     fn test_create_dir_all() {
         let mut mock_fs = MockFileSystem {
             path_exists: false,
@@ -63,6 +64,7 @@ mod tests {
         assert!(mock_fs.create_dir_all_called);
     }
     #[test]
+    // If the directory exists, create_dir_all should not be called
     fn test_not_create_dir_all() {
         let mut mock_fs = MockFileSystem {
             path_exists: true,
