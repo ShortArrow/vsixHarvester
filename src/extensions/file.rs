@@ -92,3 +92,20 @@ pub async fn download(
 
     Ok(())
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_name_with_platform() {
+        let result = name(Some("win32"), "microsoft", "vscode", "1.0.0");
+        assert_eq!(result, "microsoft.vscode-1.0.0@win32.vsix");
+    }
+
+    #[test]
+    fn test_name_without_platform() {
+        let result = name(None, "microsoft", "vscode", "1.0.0");
+        assert_eq!(result, "microsoft.vscode-1.0.0.vsix");
+    }
+}
