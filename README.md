@@ -57,6 +57,10 @@ vsixHarvester \
 - `darwin-arm64`
 - `linux-x64`
 - `linux-arm64`
+- `alpine-x64`
+- `alpine-arm64`
+
+and more...
 
 ### extensions.json Format
 
