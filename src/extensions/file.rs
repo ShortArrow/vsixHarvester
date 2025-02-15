@@ -5,6 +5,20 @@ use crate::extensions::url;
 use std::fs;
 use std::path::Path;
 
+fn name(
+    target_platform: Option<&str>,
+    publisher: &str,
+    extension_name: &str,
+    version: &str,
+) -> String {
+    match target_platform {
+        Some(target_platform) => {
+            format!("{publisher}.{extension_name}-{version}@{target_platform}.vsix")
+        }
+        None => format!("{publisher}.{extension_name}-{version}.vsix"),
+    }
+}
+
 pub async fn download(
     extension: &str,
     destination: &str,
@@ -36,12 +50,7 @@ pub async fn download(
     }
 
     // Make file path
-    let file_name = match target_platform {
-        Some(target_platform) => {
-            format!("{publisher}.{extension_name}-{version}@{target_platform}.vsix")
-        }
-        None => format!("{publisher}.{extension_name}-{version}.vsix"),
-    };
+    let file_name = name(target_platform, publisher, extension_name, version);
     let file_path = format!("{destination}/{file_name}");
 
     // Check if the file already exists
