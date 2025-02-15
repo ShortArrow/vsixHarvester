@@ -1,3 +1,5 @@
+use crate::extensions::parse::parse;
+use crate::extensions::parse::ExtensionInfo;
 use crate::extensions::url::query_url;
 use serde_json::json;
 use std::collections::HashMap;
@@ -25,37 +27,6 @@ pub fn parse_extension_name(name: &str) -> ExtensionName {
         name: name.to_string(),
         publisher: publisher.to_string(),
     }
-}
-
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct ExtensionInfo {
-    // Key is target platform (None if not exists)
-    // Value is the latest version for the platform
-    pub arch_versions: HashMap<Option<String>, String>,
-}
-
-pub fn parse(
-    response_json: &serde_json::Value,
-) -> Result<HashMap<Option<String>, String>, &'static str> {
-    let versions_array = response_json["results"][0]["extensions"][0]["versions"]
-        .as_array()
-        .ok_or("Failed to get versions array")?;
-
-    // Restrucuturing the versions array into a dictionary
-    // To be each architecuture has the latest version
-    let mut arch_versions: HashMap<Option<String>, String> = HashMap::new();
-    for v in versions_array {
-        if let Some(version_str) = v["version"].as_str() {
-            let arch = v
-                .get("targetPlatform")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
-            if !arch_versions.contains_key(&arch) {
-                arch_versions.insert(arch, version_str.to_string());
-            }
-        }
-    }
-    Ok(arch_versions)
 }
 
 pub async fn get(
