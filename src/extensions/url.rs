@@ -13,3 +13,9 @@ pub fn for_download(
             ),
     }
 }
+
+pub const BASE_URL: &str = "https://marketplace.visualstudio.com/_apis/public/gallery/";
+
+pub fn query_url() -> String {
+    format!("{BASE_URL}/extensionquery")
+}

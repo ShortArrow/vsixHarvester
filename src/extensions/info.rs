@@ -1,5 +1,6 @@
 use log::{debug, info};
 use serde_json::json;
+use crate::extensions::url::query_url;
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ExtensionInfo {
@@ -13,7 +14,6 @@ pub async fn get(
     proxy: Option<&str>,
     verbose: bool,
 ) -> Result<ExtensionInfo, Box<dyn std::error::Error>> {
-    let api_url = "https://marketplace.visualstudio.com/_apis/public/gallery/extensionquery";
 
     let payload = json!({
         "filters": [{
@@ -41,7 +41,7 @@ pub async fn get(
         println!("Sending query for Marketplace API: {publisher}.{extension_name}");
     }
     let resp = client
-        .post(api_url)
+        .post(&query_url())
         .header("Content-Type", "application/json")
         .header("Accept", "application/json;api-version=3.0-preview.1")
         .header("User-Agent", "Offline VSIX/1.0")
