@@ -34,6 +34,30 @@ pub struct ExtensionInfo {
     pub arch_versions: HashMap<Option<String>, String>,
 }
 
+pub fn parse(
+    response_json: &serde_json::Value,
+) -> Result<HashMap<Option<String>, String>, &'static str> {
+    let versions_array = response_json["results"][0]["extensions"][0]["versions"]
+        .as_array()
+        .ok_or("Failed to get versions array")?;
+
+    // Restrucuturing the versions array into a dictionary
+    // To be each architecuture has the latest version
+    let mut arch_versions: HashMap<Option<String>, String> = HashMap::new();
+    for v in versions_array {
+        if let Some(version_str) = v["version"].as_str() {
+            let arch = v
+                .get("targetPlatform")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+            if !arch_versions.contains_key(&arch) {
+                arch_versions.insert(arch, version_str.to_string());
+            }
+        }
+    }
+    Ok(arch_versions)
+}
+
 pub async fn get(
     publisher: &str,
     extension_name: &str,
@@ -80,24 +104,7 @@ pub async fn get(
     }
 
     let response_json: serde_json::Value = response.json().await?;
-
-    let versions_array = response_json["results"][0]["extensions"][0]["versions"]
-        .as_array()
-        .ok_or("Failed to get versions array")?;
-
-    // Restrucuturing the versions array into a dictionary
-    // To be each architecuture has the latest version
-    let mut arch_versions: HashMap<Option<String>, String> = HashMap::new();
-    for v in versions_array {
-        if let Some(version_str) = v["version"].as_str() {
-            let arch = v.get("targetPlatform")
-                .and_then(|v| v.as_str())
-                .map(|s| s.to_string());
-            if !arch_versions.contains_key(&arch) {
-                arch_versions.insert(arch, version_str.to_string());
-            }
-        }
-    }
+    let arch_versions: HashMap<Option<String>, String> = parse(&response_json)?;
 
     Ok(ExtensionInfo { arch_versions })
 }
@@ -125,12 +132,20 @@ mod tests {
             Some("win32-ia32".to_string()),
         ];
         for arch in expected_archs {
-            assert!(extension_info.arch_versions.contains_key(&arch), "Missing arch: {:?}", arch);
+            assert!(
+                extension_info.arch_versions.contains_key(&arch),
+                "Missing arch: {:?}",
+                arch
+            );
         }
         // Check that the first character of each version string is a digit
         for v in extension_info.arch_versions.values() {
             let first = v.chars().next().unwrap();
-            assert!(first.is_digit(10), "Version string should start with a digit: {}", v);
+            assert!(
+                first.is_digit(10),
+                "Version string should start with a digit: {}",
+                v
+            );
         }
     }
 }
