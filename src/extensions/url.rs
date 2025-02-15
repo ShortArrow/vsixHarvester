@@ -2,7 +2,7 @@ pub fn for_download(
     publisher: &str,
     extension_name: &str,
     version: &str,
-    target_platform: Option<&str>,
+    target_platform: Option<String>,
 ) -> String {
     match target_platform {
         Some(platform) => format!(
@@ -44,8 +44,8 @@ mod tests {
         let publisher = "another_publisher";
         let extension_name = "another_extension";
         let version = "1.0.0";
-        let target_platform = Some("win32-x64");
-        let unwraped_target_platform = target_platform.unwrap();
+        let target_platform = Some("win32-x64".to_string());
+        let unwraped_target_platform = target_platform.clone().unwrap();
         let expected = format!(
             "https://marketplace.visualstudio.com/_apis/public/gallery/publishers/{publisher}/vsextensions/{extension_name}/{version}/vspackage?targetPlatform={unwraped_target_platform}",
         );

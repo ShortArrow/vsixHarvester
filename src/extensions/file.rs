@@ -6,7 +6,7 @@ use std::fs;
 use std::path::Path;
 
 fn name(
-    target_platform: Option<&str>,
+    target_platform: Option<String>,
     publisher: &str,
     extension_name: &str,
     version: &str,
@@ -44,7 +44,7 @@ pub async fn download(
 
     // Create download url
     let target_platform = platform::decide_target(os_arch, extension_info);
-    let download_url = url::for_download(publisher, extension_name, version, target_platform);
+    let download_url = url::for_download(publisher, extension_name, version, target_platform.clone());
     if verbose {
         println!("Download URL: {download_url:?}");
     }
@@ -99,7 +99,7 @@ mod tests {
 
     #[test]
     fn test_name_with_platform() {
-        let result = name(Some("win32"), "microsoft", "vscode", "1.0.0");
+        let result = name(Some("win32".to_string()), "microsoft", "vscode", "1.0.0");
         assert_eq!(result, "microsoft.vscode-1.0.0@win32.vsix");
     }
 
