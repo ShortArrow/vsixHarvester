@@ -1,6 +1,32 @@
+use crate::extensions::url::query_url;
 use log::{debug, info};
 use serde_json::json;
-use crate::extensions::url::query_url;
+
+#[derive(Debug)]
+pub struct ExtensionName {
+    pub name: String,
+    pub publisher: String,
+}
+
+pub fn validate_extension_name(name: &str) -> bool {
+    let parts: Vec<&str> = name.split('.').collect();
+    parts.len() == 2
+}
+
+pub fn parse_extension_name(name: &str) -> ExtensionName {
+    if !validate_extension_name(name) {
+        eprintln!("Invalid extension format: {name}");
+        panic!("Extension name must be in the format 'publisher.name'");
+    }
+
+    let parts: Vec<&str> = name.split('.').collect();
+    let publisher = parts[0];
+    let name = parts[1];
+    ExtensionName {
+        name: name.to_string(),
+        publisher: publisher.to_string(),
+    }
+}
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ExtensionInfo {
@@ -14,7 +40,6 @@ pub async fn get(
     proxy: Option<&str>,
     verbose: bool,
 ) -> Result<ExtensionInfo, Box<dyn std::error::Error>> {
-
     let payload = json!({
         "filters": [{
             "criteria": [

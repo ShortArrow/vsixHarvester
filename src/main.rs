@@ -3,7 +3,7 @@ use env_logger;
 use std::error::Error;
 use std::fs;
 use tokio;
-use extensions::extension;
+use extensions::file;
 
 mod cli;
 mod directory;
@@ -42,7 +42,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if args.verbose {
             println!("Attempting to download extension: {}", &extension);
         }
-        if let Err(e) = extension::download(
+        if let Err(e) = file::download(
             &extension,
             &args.destination,
             args.no_cache,
