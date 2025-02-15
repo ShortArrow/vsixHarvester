@@ -59,6 +59,8 @@ vsixHarvester \
 - `linux-arm64`
 - `alpine-x64`
 - `alpine-arm64`
+- `win32-ia32`
+- `linux-armhf`
 
 and more...
 
