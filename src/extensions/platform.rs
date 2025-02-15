@@ -56,54 +56,60 @@ pub fn get_current() -> String {
 
 pub fn decide_target(specified: Option<&str>, info: info::ExtensionInfo) -> Option<String> {
     let current = get_current();
-    let supporteds = info.architectures.clone();
-    if supporteds.is_empty() {
-        return None;
-    }
-    match specified {
-        Some(specified) if supporteds.contains(&specified.to_string()) => Some(specified.to_owned()),
-        Some(specified) => {
+    if let Some(specified) = specified {
+        if info.arch_versions.contains_key(&Some(specified.to_string())) {
+            Some(specified.to_owned())
+        } else {
             eprintln!(
-                "Unsupported OS architecture: {specified} is not supported for {supporteds:?}"
+                "Unsupported OS architecture: {specified} is not supported for {:?}",
+                info.arch_versions
             );
             None
         }
-        None if supporteds.contains(&current.to_string()) => Some(current),
-        None => None,
+    } else if info.arch_versions.contains_key(&Some(current.clone())) {
+        Some(current)
+    } else {
+        None
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::extensions::info::ExtensionInfo;
+    use std::collections::HashMap;
+
     #[test]
     fn test_when_current_is_supported() {
         let current = get_current();
-        let info = info::ExtensionInfo {
-            architectures: vec![current.clone(), "x64".to_string(), "x86".to_string()],
-            ..Default::default()
-        };
+        let mut arch_versions = HashMap::new();
+        arch_versions.insert(Some(current.clone()), "ver".to_string());
+        arch_versions.insert(Some("x64".to_string()), "ver".to_string());
+        arch_versions.insert(Some("x86".to_string()), "ver".to_string());
+        let info = ExtensionInfo { arch_versions };
+
         assert_eq!(Some("x64".to_string()), decide_target(Some("x64"), info.clone()));
         assert_eq!(Some("x86".to_string()), decide_target(Some("x86"), info.clone()));
         assert_eq!(None, decide_target(Some("tekito"), info.clone()));
-        assert_eq!(Some(current), decide_target(None, info));
+        assert_eq!(Some(current), decide_target(None, info.clone()));
     }
+
     #[test]
     fn test_when_current_is_not_supported() {
-        let info = info::ExtensionInfo {
-            architectures: vec!["x64".to_string(), "x86".to_string()],
-            ..Default::default()
-        };
-        let current = &get_current();
+        let mut arch_versions = HashMap::new();
+        arch_versions.insert(Some("x64".to_string()), "ver".to_string());
+        arch_versions.insert(Some("x86".to_string()), "ver".to_string());
+        let info = ExtensionInfo { arch_versions };
+        let current = get_current();
         assert_eq!(None, decide_target(None, info.clone()));
         assert_eq!(Some("x64".to_string()), decide_target(Some("x64"), info.clone()));
-        assert_eq!(None, decide_target(Some(current), info));
+        assert_eq!(None, decide_target(Some(&current), info));
     }
+
     #[test]
     fn test_when_no_supported_architectures() {
-        let info = info::ExtensionInfo {
-            architectures: vec![],
-            ..Default::default()
+        let info = ExtensionInfo {
+            arch_versions: HashMap::new(),
         };
         assert_eq!(None, decide_target(None, info.clone()));
         assert_eq!(None, decide_target(Some("x64"), info));

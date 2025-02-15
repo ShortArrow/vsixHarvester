@@ -1,6 +1,6 @@
 use crate::extensions::url::query_url;
-use log::{debug, info};
 use serde_json::json;
+use std::collections::HashMap;
 
 #[derive(Debug)]
 pub struct ExtensionName {
@@ -18,7 +18,6 @@ pub fn parse_extension_name(name: &str) -> ExtensionName {
         eprintln!("Invalid extension format: {name}");
         panic!("Extension name must be in the format 'publisher.name'");
     }
-
     let parts: Vec<&str> = name.split('.').collect();
     let publisher = parts[0];
     let name = parts[1];
@@ -30,8 +29,9 @@ pub fn parse_extension_name(name: &str) -> ExtensionName {
 
 #[derive(Debug, Clone, PartialEq, Default)]
 pub struct ExtensionInfo {
-    pub version: String,
-    pub architectures: Vec<String>,
+    // Key is target platform (None if not exists)
+    // Value is the latest version for the platform
+    pub arch_versions: HashMap<Option<String>, String>,
 }
 
 pub async fn get(
@@ -65,7 +65,7 @@ pub async fn get(
     if verbose {
         println!("Sending query for Marketplace API: {publisher}.{extension_name}");
     }
-    let resp = client
+    let response = client
         .post(&query_url())
         .header("Content-Type", "application/json")
         .header("Accept", "application/json;api-version=3.0-preview.1")
@@ -74,37 +74,32 @@ pub async fn get(
         .send()
         .await?;
 
-    if !resp.status().is_success() {
+    if !response.status().is_success() {
         eprintln!("Failed query for Marketplace API");
         return Err(Box::from("Failed query for Marketplace API"));
     }
 
-    let resp_json: serde_json::Value = resp.json().await?;
+    let response_json: serde_json::Value = response.json().await?;
 
-    // Extract version
-    let version = resp_json["results"][0]["extensions"][0]["versions"][0]["version"]
-        .as_str()
-        .ok_or("Failed to get extension version")?
-        .to_string();
-    debug!("Response debug: {version:?}");
-    info!("Response info: {version:?}");
-    println!("{version:?}");
-
-    // Extract supported architectures
-    let architectures = resp_json["results"][0]["extensions"][0]["versions"]
+    let versions_array = response_json["results"][0]["extensions"][0]["versions"]
         .as_array()
-        .ok_or("Failed to get versions array")?
-        .iter()
-        .filter_map(|v| v["targetPlatform"].as_str().map(|s| s.to_string()))
-        .collect();
-    debug!("Response debug: {architectures:#?}");
-    info!("Response info: {architectures:#?}");
-    println!("{architectures:?}");
+        .ok_or("Failed to get versions array")?;
 
-    Ok(ExtensionInfo {
-        version,
-        architectures,
-    })
+    // Restrucuturing the versions array into a dictionary
+    // To be each architecuture has the latest version
+    let mut arch_versions: HashMap<Option<String>, String> = HashMap::new();
+    for v in versions_array {
+        if let Some(version_str) = v["version"].as_str() {
+            let arch = v.get("targetPlatform")
+                .and_then(|v| v.as_str())
+                .map(|s| s.to_string());
+            if !arch_versions.contains_key(&arch) {
+                arch_versions.insert(arch, version_str.to_string());
+            }
+        }
+    }
+
+    Ok(ExtensionInfo { arch_versions })
 }
 
 #[cfg(test)]
@@ -116,35 +111,26 @@ mod tests {
         let extension_info = get("rust-lang", "rust-analyzer", None, false)
             .await
             .unwrap();
-        let firstversion = extension_info.version.chars().next().unwrap();
-        let secondversion = extension_info.version.chars().nth(2).unwrap();
-        let thirdversion = extension_info.version.chars().nth(4).unwrap();
-        let is_digit_first = firstversion.is_digit(10);
-        let is_digit_second = secondversion.is_digit(10);
-        let is_digit_third = thirdversion.is_digit(10);
-        assert_eq!(is_digit_first, true);
-        assert_eq!(is_digit_second, true);
-        assert_eq!(is_digit_third, true);
 
-        let expected_architectures = vec![
-            "win32-arm64",
-            "darwin-x64",
-            "win32-x64",
-            "linux-armhf",
-            "linux-x64",
-            "linux-arm64",
-            "alpine-x64",
-            "darwin-arm64",
-            "win32-ia32",
+        // Check if the expected platforms exist
+        let expected_archs = vec![
+            Some("win32-arm64".to_string()),
+            Some("darwin-x64".to_string()),
+            Some("win32-x64".to_string()),
+            Some("linux-armhf".to_string()),
+            Some("linux-x64".to_string()),
+            Some("linux-arm64".to_string()),
+            Some("alpine-x64".to_string()),
+            Some("darwin-arm64".to_string()),
+            Some("win32-ia32".to_string()),
         ];
-
-        for arch in expected_architectures.clone() {
-            assert!(extension_info.architectures.contains(&arch.to_string()));
+        for arch in expected_archs {
+            assert!(extension_info.arch_versions.contains_key(&arch), "Missing arch: {:?}", arch);
         }
-
-        assert_eq!(
-            extension_info.architectures.len(),
-            expected_architectures.len()
-        );
+        // Check that the first character of each version string is a digit
+        for v in extension_info.arch_versions.values() {
+            let first = v.chars().next().unwrap();
+            assert!(first.is_digit(10), "Version string should start with a digit: {}", v);
+        }
     }
 }

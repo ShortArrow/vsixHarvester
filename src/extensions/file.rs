@@ -37,20 +37,21 @@ pub async fn download(
 
     // Get latest version
     let extension_info = info::get(publisher, extension_name, proxy, verbose).await?;
-    let version = &extension_info.version.clone();
+    let versions = &extension_info.arch_versions.clone();
     if verbose {
-        println!("Latest version of {extension}: {version:?}");
+        println!("Latest version of {extension}: {versions:?}");
     }
 
     // Create download url
-    let target_platform = platform::decide_target(os_arch, extension_info);
-    let download_url = url::for_download(publisher, extension_name, version, target_platform.clone());
+    let target_platform = platform::decide_target(os_arch, extension_info.clone());
+    let latest_version = extension_info.arch_versions.get(&target_platform.clone());
+    let download_url = url::for_download(publisher, extension_name, latest_version.clone().unwrap(), target_platform.clone());
     if verbose {
         println!("Download URL: {download_url:?}");
     }
 
     // Make file path
-    let file_name = name(target_platform, publisher, extension_name, version);
+    let file_name = name(target_platform, publisher, extension_name, latest_version.unwrap());
     let file_path = format!("{destination}/{file_name}");
 
     // Check if the file already exists
