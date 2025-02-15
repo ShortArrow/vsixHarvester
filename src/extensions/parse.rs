@@ -1,12 +1,5 @@
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, PartialEq, Default)]
-pub struct ExtensionInfo {
-    // Key is target platform (None if not exists)
-    // Value is the latest version for the platform
-    pub arch_versions: HashMap<Option<String>, String>,
-}
-
 pub fn parse(
     response_json: &serde_json::Value,
 ) -> Result<HashMap<Option<String>, String>, &'static str> {

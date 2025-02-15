@@ -1,8 +1,14 @@
 use crate::extensions::parse::parse;
-use crate::extensions::parse::ExtensionInfo;
 use crate::extensions::url::query_url;
 use serde_json::json;
 use std::collections::HashMap;
+
+#[derive(Debug, Clone, PartialEq, Default)]
+pub struct ExtensionInfo {
+    // Key is target platform (None if not exists)
+    // Value is the latest version for the platform
+    pub arch_versions: HashMap<Option<String>, String>,
+}
 
 #[derive(Debug)]
 pub struct ExtensionName {
