@@ -23,7 +23,11 @@ pub fn parse(
     }
     Ok(arch_versions)
 }
-pub const LOG3: &str = r#""
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+    const LOG3: &str = r#"
 {
     "results": [
         {
@@ -44,7 +48,7 @@ pub const LOG3: &str = r#""
     ]
 }
 "#;
-pub const LOG2: &str = r#"
+    const LOG2: &str = r#"
 {
     "results": [
         {
@@ -62,7 +66,7 @@ pub const LOG2: &str = r#"
 }
 "#;
 
-pub const LOG1: &str = r#"
+    const LOG1: &str = r#"
 {
     "results": [
         {
@@ -115,3 +119,62 @@ pub const LOG1: &str = r#"
     ]
 }
 "#;
+
+    #[test]
+    fn test_parse() {
+        let response_json: serde_json::Value = serde_json::from_str(LOG1).unwrap();
+        let arch_versions = parse(&response_json).unwrap();
+        assert_eq!(arch_versions.len(), 10);
+        assert_eq!(
+            arch_versions.get(&Some("win32-x64".to_string())),
+            Some(&"0.4.2304".to_string())
+        );
+        assert_eq!(
+            arch_versions.get(&Some("linux-arm64".to_string())),
+            Some(&"0.4.2304".to_string())
+        );
+        assert_eq!(
+            arch_versions.get(&Some("darwin-x64".to_string())),
+            Some(&"0.4.2304".to_string())
+        );
+        assert_eq!(
+            arch_versions.get(&Some("darwin-arm64".to_string())),
+            Some(&"0.4.2304".to_string())
+        );
+        assert_eq!(
+            arch_versions.get(&Some("alpine-x64".to_string())),
+            Some(&"0.4.2304".to_string())
+        );
+        assert_eq!(
+            arch_versions.get(&Some("win32-arm64".to_string())),
+            Some(&"0.4.2304".to_string())
+        );
+        assert_eq!(
+            arch_versions.get(&Some("linux-x64".to_string())),
+            Some(&"0.4.2304".to_string())
+        );
+        assert_eq!(
+            arch_versions.get(&Some("linux-armhf".to_string())),
+            Some(&"0.4.2304".to_string())
+        );
+        assert_eq!(
+            arch_versions.get(&Some("win32-ia32".to_string())),
+            Some(&"0.4.1731".to_string())
+        );
+        assert_eq!(arch_versions.get(&None), Some(&"0.4.1067".to_string()));
+
+        let response_json: serde_json::Value = serde_json::from_str(LOG2).unwrap();
+        let arch_versions = parse(&response_json).unwrap();
+        assert_eq!(arch_versions.len(), 1);
+        assert_eq!(arch_versions.get(&None), Some(&"0.0.10".to_string()));
+
+        let response_json: serde_json::Value = serde_json::from_str(LOG3).unwrap();
+        let arch_versions = parse(&response_json).unwrap();
+        assert_eq!(arch_versions.len(), 1);
+        assert_eq!(
+            arch_versions.get(&Some("linux-x64".to_string())),
+            Some(&"1.11.0".to_string())
+        );
+        assert_eq!(arch_versions.get(&None), Some(&"1.11.3".to_string()));
+    }
+}
