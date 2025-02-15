@@ -61,8 +61,9 @@ vsixHarvester \
 - `alpine-arm64`
 - `win32-ia32`
 - `linux-armhf`
+- `web`
 
-and more...
+[Platform-specific](https://code.visualstudio.com/api/working-with-extensions/publishing-extension#platformspecific-extensions)
 
 ### extensions.json Format
 
