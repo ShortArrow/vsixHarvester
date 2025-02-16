@@ -21,3 +21,6 @@ log = "0.4.22"
 env_logger = "0.11.5"
 cargo-nextest = "0.9.85"
 
+[dev-dependencies]
+rstest = "0.24.0"
+
