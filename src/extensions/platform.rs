@@ -1,5 +1,7 @@
 use crate::extensions::info;
 
+use super::version;
+
 pub fn get_current() -> String {
     // # Provide the following ARCH values
     // - x86
@@ -57,7 +59,10 @@ pub fn get_current() -> String {
 pub fn decide_target(specified: Option<&str>, info: info::ExtensionInfo) -> Option<String> {
     let current = get_current();
     if let Some(specified) = specified {
-        if info.arch_versions.contains_key(&Some(specified.to_string())) {
+        if info
+            .arch_versions
+            .contains_key(&Some(specified.to_string()))
+        {
             Some(specified.to_owned())
         } else {
             eprintln!(
@@ -67,7 +72,16 @@ pub fn decide_target(specified: Option<&str>, info: info::ExtensionInfo) -> Opti
             None
         }
     } else if info.arch_versions.contains_key(&Some(current.clone())) {
-        Some(current)
+        // The version binded for the current platform
+        let current_version =
+            version::parse(info.arch_versions.get(&Some(current.clone())).unwrap());
+        // The version binded for the None platform
+        let none_version = version::parse(info.arch_versions.get(&None).unwrap());
+        if current_version > none_version {
+            Some(current)
+        } else {
+            None
+        }
     } else {
         None
     }
@@ -88,8 +102,14 @@ mod tests {
         arch_versions.insert(Some("x86".to_string()), "ver".to_string());
         let info = ExtensionInfo { arch_versions };
 
-        assert_eq!(Some("x64".to_string()), decide_target(Some("x64"), info.clone()));
-        assert_eq!(Some("x86".to_string()), decide_target(Some("x86"), info.clone()));
+        assert_eq!(
+            Some("x64".to_string()),
+            decide_target(Some("x64"), info.clone())
+        );
+        assert_eq!(
+            Some("x86".to_string()),
+            decide_target(Some("x86"), info.clone())
+        );
         assert_eq!(None, decide_target(Some("tekito"), info.clone()));
         assert_eq!(Some(current), decide_target(None, info.clone()));
     }
@@ -102,7 +122,10 @@ mod tests {
         let info = ExtensionInfo { arch_versions };
         let current = get_current();
         assert_eq!(None, decide_target(None, info.clone()));
-        assert_eq!(Some("x64".to_string()), decide_target(Some("x64"), info.clone()));
+        assert_eq!(
+            Some("x64".to_string()),
+            decide_target(Some("x64"), info.clone())
+        );
         assert_eq!(None, decide_target(Some(&current), info));
     }
 
