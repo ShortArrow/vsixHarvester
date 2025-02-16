@@ -72,15 +72,23 @@ pub fn decide_target(specified: Option<&str>, info: info::ExtensionInfo) -> Opti
             None
         }
     } else if info.arch_versions.contains_key(&Some(current.clone())) {
-        // The version binded for the current platform
-        let current_version =
-            version::parse(info.arch_versions.get(&Some(current.clone())).unwrap());
-        // The version binded for the None platform
-        let none_version = version::parse(info.arch_versions.get(&None).unwrap());
-        if current_version > none_version {
-            Some(current)
+        let is_none_supported = info.arch_versions.contains_key(&None);
+        if !is_none_supported {
+            return Some(current);
+        }
+        // Check if the current version is supported and if there is a version for None
+        if let Some(none_version_str) = info.arch_versions.get(&None) {
+            let current_version =
+                version::parse(info.arch_versions.get(&Some(current.clone())).unwrap());
+
+            let none_version = version::parse(none_version_str);
+            if current_version > none_version {
+                Some(current)
+            } else {
+                None
+            }
         } else {
-            None
+            Some(current)
         }
     } else {
         None
@@ -93,13 +101,24 @@ mod tests {
     use crate::extensions::info::ExtensionInfo;
     use std::collections::HashMap;
 
+    fn pattern1() -> ExtensionInfo {
+        ExtensionInfo {
+            arch_versions: {
+                let mut map = HashMap::new();
+                map.insert(Some("win32-x64".to_string()), "10.1.0".to_string());
+                map.insert(Some("win32-arm".to_string()), "10.1.0".to_string());
+                map.insert(Some("linux-x64".to_string()), "10.1.0".to_string());
+                map.insert(Some("arm".to_string()), "10.1.0".to_string());
+                map.insert(Some("aarch64".to_string()), "10.1.0".to_string());
+                map
+            },
+        }
+    }
+
     #[test]
     fn test_when_current_is_supported() {
         let current = get_current();
-        let mut arch_versions = HashMap::new();
-        arch_versions.insert(Some(current.clone()), "ver".to_string());
-        arch_versions.insert(Some("x64".to_string()), "ver".to_string());
-        arch_versions.insert(Some("x86".to_string()), "ver".to_string());
+        let arch_versions = pattern1().arch_versions;
         let info = ExtensionInfo { arch_versions };
 
         assert_eq!(
