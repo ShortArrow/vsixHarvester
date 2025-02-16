@@ -43,15 +43,26 @@ pub async fn download(
     }
 
     // Create download url
-    let target_platform = platform::decide_target(os_arch, extension_info.clone());
+    let current = platform::get_current();
+    let target_platform = platform::decide_target(os_arch, current, extension_info.clone());
     let latest_version = extension_info.arch_versions.get(&target_platform.clone());
-    let download_url = url::for_download(publisher, extension_name, latest_version.clone().unwrap(), target_platform.clone());
+    let download_url = url::for_download(
+        publisher,
+        extension_name,
+        latest_version.clone().unwrap(),
+        target_platform.clone(),
+    );
     if verbose {
         println!("Download URL: {download_url:?}");
     }
 
     // Make file path
-    let file_name = name(target_platform, publisher, extension_name, latest_version.unwrap());
+    let file_name = name(
+        target_platform,
+        publisher,
+        extension_name,
+        latest_version.unwrap(),
+    );
     let file_path = format!("{destination}/{file_name}");
 
     // Check if the file already exists

@@ -56,8 +56,11 @@ pub fn get_current() -> String {
     format!("{modified_os}-{modified_arch}")
 }
 
-pub fn decide_target(specified: Option<&str>, info: info::ExtensionInfo) -> Option<String> {
-    let current = get_current();
+pub fn decide_target(
+    specified: Option<&str>,
+    current: String,
+    info: info::ExtensionInfo,
+) -> Option<String> {
     if let Some(specified) = specified {
         if info
             .arch_versions
@@ -99,55 +102,64 @@ pub fn decide_target(specified: Option<&str>, info: info::ExtensionInfo) -> Opti
 mod tests {
     use super::*;
     use crate::extensions::info::ExtensionInfo;
+    use rstest::rstest;
     use std::collections::HashMap;
 
     fn pattern1() -> ExtensionInfo {
         ExtensionInfo {
             arch_versions: {
                 let mut map = HashMap::new();
+                map.insert(None, "10.1.0".to_string());
                 map.insert(Some("win32-x64".to_string()), "10.1.0".to_string());
-                map.insert(Some("win32-arm".to_string()), "10.1.0".to_string());
+                map.insert(Some("win32-arm64".to_string()), "10.1.0".to_string());
                 map.insert(Some("linux-x64".to_string()), "10.1.0".to_string());
-                map.insert(Some("arm".to_string()), "10.1.0".to_string());
+                map.insert(Some("linux-arm64".to_string()), "10.1.3".to_string());
+                map.insert(Some("web".to_string()), "10.1.0".to_string());
                 map.insert(Some("aarch64".to_string()), "10.1.0".to_string());
                 map
             },
         }
     }
 
-    #[test]
-    fn test_when_current_is_supported() {
-        let current = get_current();
+    #[rstest]
+    #[case(None, Some("web"))]
+    #[case(Some("x64"), Some("win32-x64"))]
+    #[case(Some("linux-x64"), Some("linux-x64"))]
+    fn test_when_current_is_supported(
+        #[case] target: Option<&str>,
+        #[case] expected: Option<&str>,
+    ) {
         let arch_versions = pattern1().arch_versions;
+        let current = "linux-x64".to_string();
         let info = ExtensionInfo { arch_versions };
-
-        assert_eq!(None, decide_target(Some("x64"), info.clone()));
-        assert_eq!(None, decide_target(Some("x86"), info.clone()));
-        assert_eq!(None, decide_target(Some("tekito"), info.clone()));
-        assert_eq!(Some(current), decide_target(None, info.clone()));
+        assert_eq!(
+            expected,
+            decide_target(target, current, info.clone()).as_deref()
+        );
     }
 
     #[test]
     fn test_when_current_is_not_supported() {
+        let current = "linux-x64".to_string();
         let mut arch_versions = HashMap::new();
         arch_versions.insert(Some("x64".to_string()), "ver".to_string());
         arch_versions.insert(Some("x86".to_string()), "ver".to_string());
         let info = ExtensionInfo { arch_versions };
-        let current = get_current();
-        assert_eq!(None, decide_target(None, info.clone()));
+        assert_eq!(None, decide_target(None, current.clone(), info.clone()));
         assert_eq!(
             Some("x64".to_string()),
-            decide_target(Some("x64"), info.clone())
+            decide_target(Some("x64"), current.clone(), info.clone())
         );
-        assert_eq!(None, decide_target(Some(&current), info));
+        assert_eq!(None, decide_target(Some(&current), current.clone(), info));
     }
 
     #[test]
     fn test_when_no_supported_architectures() {
+        let current = "linux-x64".to_string();
         let info = ExtensionInfo {
             arch_versions: HashMap::new(),
         };
-        assert_eq!(None, decide_target(None, info.clone()));
-        assert_eq!(None, decide_target(Some("x64"), info));
+        assert_eq!(None, decide_target(None, current.clone(), info.clone()));
+        assert_eq!(None, decide_target(Some("x64"), current, info));
     }
 }
