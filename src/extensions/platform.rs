@@ -122,12 +122,13 @@ mod tests {
     }
 
     #[rstest]
-    #[case(None, Some("web"))]
-    #[case(Some("x64"), Some("win32-x64"))]
+    #[case(None, Some("test"))]
+    #[case(Some("web"), Some("web"))]
+    #[case(Some("win32-x64"), Some("win32-x64"))]
     #[case(Some("linux-x64"), Some("linux-x64"))]
     fn test_when_current_is_supported(
-        #[case] target: Option<&str>,
         #[case] expected: Option<&str>,
+        #[case] target: Option<&str>,
     ) {
         let arch_versions = pattern1().arch_versions;
         let current = "linux-x64".to_string();
