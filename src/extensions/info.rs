@@ -81,7 +81,8 @@ pub async fn get(
     }
 
     let response_json: serde_json::Value = response.json().await?;
-    let arch_versions: HashMap<Option<String>, String> = parse(&response_json)?;
+    let extension_info = parse(&response_json)?;
+    let arch_versions = extension_info.arch_versions;
 
     Ok(ExtensionInfo { arch_versions })
 }
