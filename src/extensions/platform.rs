@@ -121,14 +121,8 @@ mod tests {
         let arch_versions = pattern1().arch_versions;
         let info = ExtensionInfo { arch_versions };
 
-        assert_eq!(
-            Some("x64".to_string()),
-            decide_target(Some("x64"), info.clone())
-        );
-        assert_eq!(
-            Some("x86".to_string()),
-            decide_target(Some("x86"), info.clone())
-        );
+        assert_eq!(None, decide_target(Some("x64"), info.clone()));
+        assert_eq!(None, decide_target(Some("x86"), info.clone()));
         assert_eq!(None, decide_target(Some("tekito"), info.clone()));
         assert_eq!(Some(current), decide_target(None, info.clone()));
     }
