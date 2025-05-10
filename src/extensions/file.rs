@@ -3,6 +3,8 @@ use crate::extensions::info::parse_extension_name;
 use crate::extensions::platform;
 use crate::extensions::url;
 use std::fs;
+use std::io::Read; // For GzDecoder
+use flate2::read::GzDecoder; // For GzDecoder
 use std::path::Path;
 
 fn name(
@@ -89,12 +91,21 @@ pub async fn download(
     if verbose {
         println!("Download from {download_url}");
     }
-    let resp = client.get(&download_url).send().await?;
+    let resp = client.get(&download_url)
+        .header(reqwest::header::ACCEPT_ENCODING, "gzip")
+        .send()
+        .await?;
     if !resp.status().is_success() {
         eprintln!("Fail download of {extension}");
         return Err(Box::from("Fail download of VSIX"));
     }
-    let vsix_content = resp.bytes().await?;
+    let compressed_bytes = resp.bytes().await?;
+    let mut decoder = GzDecoder::new(&compressed_bytes[..]);
+    let mut vsix_content = Vec::new();
+    if let Err(e) = decoder.read_to_end(&mut vsix_content) {
+        eprintln!("Failed to decompress gzip data for {extension}: {e}");
+        return Err(Box::new(e));
+    }
 
     // Save file
     fs::write(&file_path, &vsix_content)?;
