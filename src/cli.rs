@@ -25,4 +25,8 @@ pub struct Args {
     /// Specify OS architecture
     #[arg(short, long)]
     pub arch: Option<String>,
+
+    /// Download a single extension by its ID (e.g., publisher.extensionName)
+    #[arg(short, long, value_name = "EXTENSION_ID")]
+    pub single: Option<String>,
 }

@@ -11,6 +11,7 @@
 - プロキシ設定をサポート。
 - ファイルが既に存在していても再ダウンロード可能。
 - 詳細なログを表示するオプション。
+- 拡張機能IDを指定して単一の拡張機能をダウンロード。
 
 ### 前提条件
 
@@ -37,6 +38,7 @@ vsixHarvest [OPTIONS]
 - `-v`, `--verbose`：詳細なログを表示します。
 - `-h`, `--help`：ヘルプ情報を表示。
 - `--arch <ARCHITECTURE>`：拡張機能をインストールする対象OSアーキテクチャ。
+- `-s`, `--single <EXTENSION_ID>`：拡張機能ID（例: `publisher.extensionName`）を指定して単一の拡張機能をダウンロードします。このオプションを使用する場合、`--input` は無視されます。
 
 #### 使用例
 
@@ -45,7 +47,18 @@ vsixHarvest \
   --input ./your/path/to/extensions.json \
   --destination ./your/path/to/extensions \
   --no-cache \
-  --os-arch win32-x64 \
+  --arch win32-x64 \
+  --verbose
+```
+
+単一の拡張機能をダウンロードする場合:
+
+```sh
+vsixHarvester \
+  --single publisher.extensionName \
+  --no-cache \
+  --arch win32-x64 \
+  --destination ./extensions \
   --verbose
 ```
 

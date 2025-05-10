@@ -11,6 +11,7 @@ This Rust program reads the `recommendations` array from an `extensions.json` fi
 - Supports proxy configuration.
 - Option to force re-download even if the file already exists.
 - Provides verbose output for detailed logging.
+- Downloads a single extension by its ID.
 
 ### Prerequisites
 
@@ -37,6 +38,7 @@ vsixHarvester [OPTIONS]
 - `-v`, `--verbose`: Enable verbose output for detailed logging.
 - `-h`, `--help`: Print help information.
 - `-a`, `--arch <ARCHITECTURE>`: OS architecture to install the extensions for.
+- `-s`, `--single <EXTENSION_ID>`: Download a single extension by its ID (e.g., `publisher.extensionName`). If this option is used, `--input` is ignored.
 
 #### Example
 
@@ -46,6 +48,17 @@ vsixHarvester \
   --destination ./your/path/to/extensions \
   --no-cache \
   --arch win32-x64 \
+  --verbose
+```
+
+To download a single extension:
+
+```sh
+vsixHarvester \
+  --single publisher.extensionName \
+  --no-cache \
+  --arch win32-x64 \
+  --destination ./extensions \
   --verbose
 ```
 
