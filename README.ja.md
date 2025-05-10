@@ -33,7 +33,7 @@ vsixHarvest [OPTIONS]
 
 - `-i`, `--input <INPUT>`：`extensions.json`ファイルへのパス。デフォルトは`./.vscode/extensions.json`。
 - `-d`, `--destination <DESTINATION>`：VSIXファイルを保存するディレクトリ。デフォルトは`./.vscode/extensions`。
-- `--no-cache`：拡張機能ファイルが既に存在していても再ダウンロードします。
+- `-f`, `--force`：拡張機能ファイルが既に存在していても再ダウンロードします。
 - `--proxy <PROXY>`：HTTPリクエストに使用するプロキシURL。
 - `-v`, `--verbose`：詳細なログを表示します。
 - `-h`, `--help`：ヘルプ情報を表示。
@@ -46,7 +46,7 @@ vsixHarvest [OPTIONS]
 vsixHarvest \
   --input ./your/path/to/extensions.json \
   --destination ./your/path/to/extensions \
-  --no-cache \
+  --force \
   --arch win32-x64 \
   --verbose
 ```
@@ -56,7 +56,7 @@ vsixHarvest \
 ```sh
 vsixHarvester \
   --single publisher.extensionName \
-  --no-cache \
+  --force \
   --arch win32-x64 \
   --destination ./extensions \
   --verbose

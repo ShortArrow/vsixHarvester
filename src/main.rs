@@ -56,7 +56,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         if let Err(e) = file::download(
             &extension,
             &args.destination,
-            args.no_cache,
+            args.force,
             args.proxy.as_deref(),
             args.verbose,
             args.arch.as_deref(),

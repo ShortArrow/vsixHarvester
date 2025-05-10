@@ -11,8 +11,8 @@ pub struct Args {
     pub destination: String,
 
     /// Force redownload if exists
-    #[arg(long)]
-    pub no_cache: bool,
+    #[arg(long, short = 'f')]
+    pub force: bool,
 
     /// Specify proxy url
     #[arg(long)]

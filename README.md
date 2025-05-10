@@ -33,7 +33,7 @@ vsixHarvester [OPTIONS]
 
 - `-i`, `--input <INPUT>`: Path to the `extensions.json` file. Default is `./.vscode/extensions.json`.
 - `-d`, `--destination <DESTINATION>`: Destination folder to save the VSIX files. Default is `./.vscode/extensions`.
-- `--no-cache`: Force re-download even if the extension file already exists.
+- `-f`, `--force`: Force re-download even if the extension file already exists.
 - `--proxy <PROXY>`: Proxy URL to use for HTTP requests.
 - `-v`, `--verbose`: Enable verbose output for detailed logging.
 - `-h`, `--help`: Print help information.
@@ -46,7 +46,7 @@ vsixHarvester [OPTIONS]
 vsixHarvester \
   --input ./your/path/to/extensions.json \
   --destination ./your/path/to/extensions \
-  --no-cache \
+  --force \
   --arch win32-x64 \
   --verbose
 ```
@@ -56,7 +56,7 @@ To download a single extension:
 ```sh
 vsixHarvester \
   --single publisher.extensionName \
-  --no-cache \
+  --force \
   --arch win32-x64 \
   --destination ./extensions \
   --verbose

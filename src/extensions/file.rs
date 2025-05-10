@@ -24,7 +24,7 @@ fn name(
 pub async fn download(
     extension: &str,
     destination: &str,
-    no_cache: bool,
+    force: bool,
     proxy: Option<&str>,
     verbose: bool,
     os_arch: Option<&str>,
@@ -68,7 +68,7 @@ pub async fn download(
     let file_path = format!("{destination}/{file_name}");
 
     // Check if the file already exists
-    if !no_cache && Path::new(&file_path).exists() {
+    if !force && Path::new(&file_path).exists() {
         if verbose {
             println!("Skip download: File is already exists. File Name {file_path}.");
         }
