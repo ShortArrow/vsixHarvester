@@ -23,7 +23,7 @@ pub struct Args {
     pub verbose: bool,
 
     /// Specify OS architecture
-    #[arg(short, long)]
+    #[arg(short, long, value_name = "ARCHITECTURE")]
     pub arch: Option<String>,
 
     /// Download a single extension by its ID (e.g., publisher.extensionName)
