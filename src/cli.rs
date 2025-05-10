@@ -4,7 +4,10 @@ use clap::{Parser, Subcommand};
 #[clap(author, version, about, long_about = None)]
 pub struct Cli {
     #[clap(subcommand)]
-    pub command: Commands,
+    pub command: Option<Commands>, // Made subcommand optional
+
+    #[clap(flatten)]
+    pub download_defaults: DownloadArgs, // Options for default (no subcommand) download
 
     /// Specify proxy url for all commands
     #[clap(long, global = true)]

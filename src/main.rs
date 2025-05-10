@@ -20,55 +20,21 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let proxy = cli.proxy.as_deref();
     let verbose = cli.verbose;
 
-    match cli.command {
+    // Determine the command to execute
+    let command_to_execute = match cli.command {
+        Some(command) => command,
+        None => {
+            if verbose {
+                println!("No subcommand specified, using top-level options for download.");
+            }
+            // Use the flattened DownloadArgs from Cli struct
+            cli::Commands::Download(cli.download_defaults)
+        }
+    };
+
+    match command_to_execute {
         cli::Commands::Download(args) => {
-            let extensions_to_download: Vec<String>;
-
-            if let Some(single_extension_id) = &args.single {
-                if verbose {
-                    println!("Attempting to download single extension: {}", single_extension_id);
-                }
-                extensions_to_download = vec![single_extension_id.clone()];
-            } else {
-                if verbose {
-                    println!("Attempting to read file: {}", &args.input);
-                }
-                let file_content = match fs::read_to_string(&args.input) {
-                    Ok(content) => content,
-                    Err(e) => {
-                        eprintln!("Failed to read file {}: {}", &args.input, e);
-                        return Err(Box::new(e) as Box<dyn Error>);
-                    }
-                };
-                let extensions_data: json::Extensions = match serde_json::from_str(&file_content) {
-                    Ok(data) => data,
-                    Err(e) => {
-                        eprintln!("Failed to parse file {}: {}", &args.input, e);
-                        return Err(Box::new(e) as Box<dyn Error>);
-                    }
-                };
-                extensions_to_download = extensions_data.recommendations;
-            }
-
-            directory::create_dir_all(&args.destination)?;
-
-            for extension_id_str in extensions_to_download {
-                if verbose {
-                    println!("Processing extension for download: {}", &extension_id_str);
-                }
-                if let Err(e) = file::download(
-                    &extension_id_str,
-                    &args.destination,
-                    args.force,
-                    proxy, // Use global proxy
-                    verbose, // Use global verbose
-                    args.arch.as_deref(),
-                )
-                .await
-                {
-                    eprintln!("Error occurred when downloading {}: {}", extension_id_str, e);
-                }
-            }
+            handle_download_command(args, proxy, verbose).await?;
         }
         cli::Commands::Info(args) => {
             let extensions_to_info: Vec<String>;
@@ -133,6 +99,70 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
                     }
                 }
             }
+        }
+    }
+    Ok(())
+}
+
+async fn handle_download_command(
+    args: cli::DownloadArgs,
+    proxy: Option<&str>,
+    verbose: bool,
+) -> Result<(), Box<dyn Error>> {
+    let extensions_to_download: Vec<String>;
+
+    if let Some(single_extension_id) = &args.single {
+        if verbose {
+            println!(
+                "Attempting to download single extension: {}",
+                single_extension_id
+            );
+        }
+        extensions_to_download = vec![single_extension_id.clone()];
+    } else {
+        if verbose {
+            println!("Attempting to read file: {}", &args.input);
+        }
+        let file_content = match fs::read_to_string(&args.input) {
+            Ok(content) => content,
+            Err(e) => {
+                eprintln!("Failed to read file {}: {}", &args.input, e);
+                return Err(Box::new(e) as Box<dyn Error>);
+            }
+        };
+        let extensions_data: json::Extensions = match serde_json::from_str(&file_content) {
+            Ok(data) => data,
+            Err(e) => {
+                eprintln!("Failed to parse file {}: {}", &args.input, e);
+                return Err(Box::new(e) as Box<dyn Error>);
+            }
+        };
+        extensions_to_download = extensions_data.recommendations;
+    }
+
+    directory::create_dir_all(&args.destination)?;
+
+    for extension_id_str in extensions_to_download {
+        if verbose {
+            println!(
+                "Processing extension for download: {}",
+                &extension_id_str
+            );
+        }
+        if let Err(e) = file::download(
+            &extension_id_str,
+            &args.destination,
+            args.force,
+            proxy,   // Use passed proxy
+            verbose, // Use passed verbose
+            args.arch.as_deref(),
+        )
+        .await
+        {
+            eprintln!(
+                "Error occurred when downloading {}: {}",
+                extension_id_str, e
+            );
         }
     }
     Ok(())
