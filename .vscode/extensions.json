@@ -7,6 +7,8 @@
     "usernamehw.errorlens",
     "vadimcn.vscode-lldb",
     "llvm-vs-code-extensions.lldb-dap",
-    "swellaby.vscode-rust-test-adapter"
+    "swellaby.vscode-rust-test-adapter",
+    "sumneko.lua",
+    "charliermarsh.ruff"
   ]
 }
