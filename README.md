@@ -2,16 +2,17 @@
 
 ## VSCode Extension Downloader in Rust
 
-This Rust program reads the `recommendations` array from an `extensions.json` file and downloads the corresponding VSIX packages for Visual Studio Code extensions.
+This Rust program downloads VSIX packages for Visual Studio Code extensions. It can read a list of extensions from an `extensions.json` file, download a single extension by its ID, or display information about extensions without downloading.
 
 ### Features
 
-- Reads a list of extensions from `extensions.json`.
+- Supports downloading single extensions or lists from `extensions.json`.
+- If no subcommand is specified, it defaults to downloading extensions based on `extensions.json` or top-level download options.
+- Displays extension information (versions, supported platforms) without downloading using the `info` command.
 - Downloads the latest version of each extension as a VSIX package.
 - Supports proxy configuration.
 - Option to force re-download even if the file already exists.
 - Provides verbose output for detailed logging.
-- Downloads a single extension by its ID.
 
 ### Prerequisites
 
@@ -26,40 +27,93 @@ cargo install vsixHarvester
 ### Usage
 
 ```sh
-vsixHarvester [OPTIONS]
+vsixHarvester [GLOBAL_OPTIONS] [COMMAND] [COMMAND_OPTIONS]
 ```
 
-#### Options
+If no `COMMAND` is specified, `vsixHarvester` defaults to the `download` behavior, using the download options provided at the top level (e.g., `vsixHarvester --single <ID>`).
 
-- `-i`, `--input <INPUT>`: Path to the `extensions.json` file. Default is `./.vscode/extensions.json`.
-- `-d`, `--destination <DESTINATION>`: Destination folder to save the VSIX files. Default is `./.vscode/extensions`.
-- `-f`, `--force`: Force re-download even if the extension file already exists.
-- `--proxy <PROXY>`: Proxy URL to use for HTTP requests.
-- `-v`, `--verbose`: Enable verbose output for detailed logging.
+#### Global Options
+
+- `--proxy <PROXY>`: Proxy URL to use for HTTP requests. (Applies to all commands)
+- `-v`, `--verbose`: Enable verbose output for detailed logging. (Applies to all commands)
 - `-h`, `--help`: Print help information.
-- `-a`, `--arch <ARCHITECTURE>`: OS architecture to install the extensions for.
+- `-V`, `--version`: Print version information.
+
+#### Commands
+
+##### `download`
+
+Downloads VSIX extension packages. If no specific download options are given with the `download` command itself, it defaults to using `./.vscode/extensions.json`.
+The download options can also be used at the top level if no command is specified.
+
+**Options for `download` (and top-level default):**
+
+- `-i`, `--input <INPUT>`: Path to the `extensions.json` file.
+  Default: `./.vscode/extensions.json`.
+- `-d`, `--destination <DESTINATION>`: Destination folder to save the VSIX files.
+  Default: `./.vscode/extensions`.
+- `-f`, `--force`: Force re-download even if the extension file already exists.
+- `-a`, `--arch <ARCHITECTURE>`: OS architecture to download the extensions for (e.g., `win32-x64`). See "Architecture options" below.
 - `-s`, `--single <EXTENSION_ID>`: Download a single extension by its ID (e.g., `publisher.extensionName`). If this option is used, `--input` is ignored.
 
-#### Example
+##### `info`
+
+Displays information about VSIX extensions (latest versions, supported platforms) without downloading them.
+
+**Options for `info`:**
+
+- `-i`, `--input <INPUT>`: Path to the `extensions.json` file to get info for multiple extensions.
+  Default: `./.vscode/extensions.json`.
+- `-s`, `--single <EXTENSION_ID>`: Get info for a single extension by its ID (e.g., `publisher.extensionName`). If this option is used, `--input` is ignored.
+
+#### Examples
+
+**Default behavior (downloading from `extensions.json`):**
 
 ```sh
-vsixHarvester \
-  --input ./your/path/to/extensions.json \
-  --destination ./your/path/to/extensions \
-  --force \
-  --arch win32-x64 \
-  --verbose
+vsixHarvester
 ```
 
-To download a single extension:
+Or explicitly:
 
 ```sh
-vsixHarvester \
-  --single publisher.extensionName \
-  --force \
-  --arch win32-x64 \
-  --destination ./extensions \
-  --verbose
+vsixHarvester download
+```
+
+**Downloading from `extensions.json` with options (no subcommand):**
+
+```sh
+vsixHarvester --input ./path/to/your/extensions.json --destination ./output_dir --force -v
+```
+
+**Downloading a single extension (no subcommand):**
+
+```sh
+vsixHarvester -s publisher.extensionName -d ./vsix_files -f -v --arch win32-x64
+```
+
+**Using the `download` subcommand explicitly:**
+
+```sh
+vsixHarvester download -s publisher.extensionName -d ./vsix_files -f -v --arch win32-x64
+```
+
+**Getting information for a single extension:**
+
+```sh
+vsixHarvester info -s publisher.extensionName
+```
+
+**Getting information for extensions listed in `extensions.json`:**
+
+```sh
+vsixHarvester info --input ./path/to/your/extensions.json
+```
+
+Or using the default `extensions.json`:
+
+```sh
+vsixHarvester info
 ```
 
 ##### Architecture options
@@ -91,6 +145,8 @@ The `extensions.json` file should have the following structure:
   ]
 }
 ```
+
+This format follows the VS Code [Workspace Recommended Extensions](https://code.visualstudio.com/docs/configure/extensions/extension-marketplace#_workspace-recommended-extensions) specification. The `recommendations` array contains extension IDs that VS Code will suggest installing when someone opens the workspace.
 
 ### Thanks
 
